@@ -4,7 +4,7 @@ use raylib::prelude::*;
 // then, within the game loop, update game and draw game
 // and finally unload the game (unsure if needed in rust) and close da window
 
-const TARGET_FPS: u32 = 60; // this is a hard fps cap
+const TARGET_FPS: u32 = 4; // this is a hard fps cap
 const PLAYER_SPEED: u32 = 60; // hardcoded but might change in future
 const SCREEN_WIDTH: i32 = 640;
 const SCREEN_HEIGHT: i32 = 640;
@@ -17,30 +17,58 @@ fn main() {
 
     rl.set_target_fps(TARGET_FPS);
 
+    // TODO: this is to be replaced with an actual game func!!
+    let mut game = Game::default();
+
     while !rl.window_should_close() { // which contains our game loop!
-        // update_game(&mut game, &rl);
-        draw_game(/*&mut game,*/ &mut rl, &thread)
+        update_game(&mut game, &rl);
+        draw_game(&mut game, &mut rl, &thread)
     }
 }
 
-fn init_game(/*game: &mut Game*/ rl: &RaylibHandle) {
+fn init_game(game: &mut Game, rl: &RaylibHandle) {
     todo!();
 }
 
-fn update_game(/*game: &mut Game*/ rl: &RaylibHandle) {
-    todo!();
+fn update_game(game: &mut Game, rl: &RaylibHandle) {
+
+    // basic controls
+
+    use raylib::consts::KeyboardKey::*;
+
+    if rl.is_key_down(KEY_W) {
+        game.player.body[0].direction = Direction::UP;
+    } else if rl.is_key_down(KEY_A) {
+        game.player.body[0].direction = Direction::LEFT;
+    } else if rl.is_key_down(KEY_S) {
+        game.player.body[0].direction = Direction::DOWN;
+    } else if rl.is_key_down(KEY_D) {
+        game.player.body[0].direction = Direction::RIGHT;
+    }
+
+    match game.player.body[0].direction {
+        Direction::UP    => game.player.body[0].position.1 -= SCREEN_HEIGHT/21,
+        Direction::DOWN  => game.player.body[0].position.1 += SCREEN_HEIGHT/21,
+        Direction::LEFT  => game.player.body[0].position.0 -= SCREEN_HEIGHT/21,
+        Direction::RIGHT => game.player.body[0].position.0 += SCREEN_HEIGHT/21,
+    }
 }
 
-fn draw_game(/*game: &mut Game*/ rl: &mut RaylibHandle, thread: &RaylibThread) {
+fn draw_game(game: &mut Game, rl: &mut RaylibHandle, thread: &RaylibThread) {
     let mut d = rl.begin_drawing(&thread);
 
     d.clear_background(Color::BLACK);
 
-    d.draw_rectangle(SCREEN_WIDTH/2, SCREEN_WIDTH/2, SCREEN_WIDTH/21, SCREEN_HEIGHT/21, Color::PINK);
+    d.draw_rectangle(
+        game.player.body[0].position.0, 
+        game.player.body[0].position.1, 
+        SCREEN_WIDTH/21, 
+        SCREEN_HEIGHT/21, 
+        Color::PINK);
 }
 
 // structs
-struct Game {
+struct Game { // doesn't derive from Default because default() is an impl within !!
     player: Player,
     game_over: bool,
     pause: bool
@@ -51,14 +79,51 @@ struct Player {
 }
 
 struct Segment {
-    position: (u8, u8),
+    position: (i32, i32),
     direction: Direction
 }
 
 #[derive(Debug)]
 enum Direction {
-    Up,
-    Down,
-    Left,
-    Right
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
+}
+
+// impl
+impl Default for Game {
+    fn default() -> Game {
+        let game_over = false;
+        let pause = false;
+
+        let player = Player::default();
+
+        Game {
+            game_over,
+            pause,
+            player
+        }
+    }
+}
+
+impl Default for Player { // basically a constructor
+    fn default() -> Self { 
+        let mut body: Vec<Segment> = vec![];
+
+        let mut segment = Segment::default(); 
+
+        body.push(segment);
+
+        Self { body }
+    }
+}
+
+impl Default for Segment {
+    fn default() -> Self {
+        let position = ( SCREEN_HEIGHT/2, SCREEN_WIDTH/2 );
+        let direction = Direction::UP;
+
+        Self { position, direction }
+    }
 }
