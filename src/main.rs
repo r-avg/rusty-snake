@@ -36,13 +36,13 @@ fn update_game(game: &mut Game, rl: &RaylibHandle) {
 
     use raylib::consts::KeyboardKey::*;
 
-    if rl.is_key_down(KEY_W) {
+    if rl.is_key_down(KEY_W) && game.player.body[0].direction != Direction::DOWN {
         game.player.body[0].direction = Direction::UP;
-    } else if rl.is_key_down(KEY_A) {
+    } else if rl.is_key_down(KEY_A) && game.player.body[0].direction != Direction::RIGHT {
         game.player.body[0].direction = Direction::LEFT;
-    } else if rl.is_key_down(KEY_S) {
+    } else if rl.is_key_down(KEY_S) && game.player.body[0].direction != Direction::UP {
         game.player.body[0].direction = Direction::DOWN;
-    } else if rl.is_key_down(KEY_D) {
+    } else if rl.is_key_down(KEY_D) && game.player.body[0].direction != Direction::LEFT {
         game.player.body[0].direction = Direction::RIGHT;
     }
 
@@ -57,7 +57,7 @@ fn update_game(game: &mut Game, rl: &RaylibHandle) {
 fn draw_game(game: &mut Game, rl: &mut RaylibHandle, thread: &RaylibThread) {
     let mut d = rl.begin_drawing(&thread);
 
-    d.clear_background(Color::BLACK);
+d.clear_background(Color::WHITE);
 
     d.draw_rectangle(
         game.player.body[0].position.0, 
@@ -83,7 +83,7 @@ struct Segment {
     direction: Direction
 }
 
-#[derive(Debug)]
+#[derive(PartialEq)]
 enum Direction {
     UP,
     DOWN,
