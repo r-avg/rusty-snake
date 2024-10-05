@@ -27,6 +27,7 @@ fn main() {
 }
 
 fn init_game(game: &mut Game, rl: &RaylibHandle) {
+    // TODO: spawn da food
     todo!();
 }
 
@@ -52,12 +53,15 @@ fn update_game(game: &mut Game, rl: &RaylibHandle) {
         Direction::LEFT  => game.player.body[0].position.0 -= SCREEN_HEIGHT/21,
         Direction::RIGHT => game.player.body[0].position.0 += SCREEN_HEIGHT/21,
     }
+
+    // TODO: is food being eaten??
+    // TODO: are you going ouroboros mode??
 }
 
 fn draw_game(game: &mut Game, rl: &mut RaylibHandle, thread: &RaylibThread) {
     let mut d = rl.begin_drawing(&thread);
 
-d.clear_background(Color::WHITE);
+    d.clear_background(Color::WHITE);
 
     d.draw_rectangle(
         game.player.body[0].position.0, 
@@ -81,6 +85,10 @@ struct Player {
 struct Segment {
     position: (i32, i32),
     direction: Direction
+}
+
+struct Food {
+    position: (i32, i32)
 }
 
 #[derive(PartialEq)]
@@ -125,5 +133,15 @@ impl Default for Segment {
         let direction = Direction::UP;
 
         Self { position, direction }
+    }
+}
+
+impl Default for food {
+    fn default() -> Self {
+        let position = (
+            // this has to be something that can be divided by 21
+        );
+
+        Self { position }
     }
 }
