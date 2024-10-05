@@ -1,4 +1,5 @@
 use raylib::prelude::*;
+use rand::*;
 
 // order to follow is: init window, init game
 // then, within the game loop, update game and draw game
@@ -27,7 +28,7 @@ fn main() {
 }
 
 fn init_game(game: &mut Game, rl: &RaylibHandle) {
-    // TODO: spawn da food
+    // TODO: spawn an food
     todo!();
 }
 
@@ -64,16 +65,27 @@ fn draw_game(game: &mut Game, rl: &mut RaylibHandle, thread: &RaylibThread) {
     d.clear_background(Color::WHITE);
 
     d.draw_rectangle(
+        // TODO: this should probably iterate through the segments. later tho
         game.player.body[0].position.0, 
         game.player.body[0].position.1, 
         SCREEN_WIDTH/21, 
         SCREEN_HEIGHT/21, 
-        Color::PINK);
+        Color::PINK
+    );
+
+    d.draw_rectangle(
+        game.food.position.0,
+        game.food.position.1,
+        SCREEN_WIDTH/21,
+        SCREEN_HEIGHT/21,
+        Color::ORANGE
+    );
 }
 
 // structs
 struct Game { // doesn't derive from Default because default() is an impl within !!
     player: Player,
+    food: Food,
     game_over: bool,
     pause: bool
 }
@@ -106,11 +118,13 @@ impl Default for Game {
         let pause = false;
 
         let player = Player::default();
+        let food = Food::default();
 
         Game {
             game_over,
             pause,
-            player
+            player,
+            food
         }
     }
 }
@@ -136,10 +150,13 @@ impl Default for Segment {
     }
 }
 
-impl Default for food {
+impl Default for Food {
     fn default() -> Self {
+        let mut rng = rand::thread_rng();
+
         let position = (
-            // this has to be something that can be divided by 21
+            (SCREEN_WIDTH/2),
+            (SCREEN_HEIGHT/2)
         );
 
         Self { position }
