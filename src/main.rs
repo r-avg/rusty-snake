@@ -9,6 +9,8 @@ const TARGET_FPS: u32 = 4; // this is a hard fps cap
 const PLAYER_SPEED: u32 = 60; // hardcoded but might change in future
 const SCREEN_WIDTH: i32 = 640;
 const SCREEN_HEIGHT: i32 = 640;
+
+let score: i32 = 0; // also keeps track of how many segments the snake has!! handy
                               
 fn main() {
     let (mut rl, thread) = raylib::init()
@@ -55,7 +57,12 @@ fn update_game(game: &mut Game, rl: &RaylibHandle) {
         Direction::RIGHT => game.player.body[0].position.0 += SCREEN_HEIGHT/21,
     }
 
-    // TODO: is food being eaten??
+    // is food being eaten??
+    if game.player.body[0].position.0 == game.food.position.0 && game.player.body[0].position.1 == game.food.position.1 {
+        score++; // hooray!
+
+        game.food.position.0 = SCREEN_HEIGHT;
+    }
     // TODO: are you going ouroboros mode??
 }
 
