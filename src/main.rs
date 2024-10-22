@@ -10,7 +10,7 @@ const PLAYER_SPEED: u32 = 60; // hardcoded but might change in future
 const SCREEN_WIDTH: i32 = 640;
 const SCREEN_HEIGHT: i32 = 640;
 
-let score: i32 = 0; // also keeps track of how many segments the snake has!! handy
+// let score: i32 = 0; // also keeps track of how many segments the snake has!! handy
                               
 fn main() {
     let (mut rl, thread) = raylib::init()
@@ -36,10 +36,12 @@ fn init_game(game: &mut Game, rl: &RaylibHandle) {
 
 fn update_game(game: &mut Game, rl: &RaylibHandle) {
 
-    // basic controls
-
+    // boilerplate
     use raylib::consts::KeyboardKey::*;
+    let mut rng = rand::thread_rng();
 
+
+    // checks so that snake controls like snake
     if rl.is_key_down(KEY_W) && game.player.body[0].direction != Direction::DOWN {
         game.player.body[0].direction = Direction::UP;
     } else if rl.is_key_down(KEY_A) && game.player.body[0].direction != Direction::RIGHT {
@@ -51,17 +53,18 @@ fn update_game(game: &mut Game, rl: &RaylibHandle) {
     }
 
     match game.player.body[0].direction {
-        Direction::UP    => game.player.body[0].position.1 -= SCREEN_HEIGHT/21,
-        Direction::DOWN  => game.player.body[0].position.1 += SCREEN_HEIGHT/21,
-        Direction::LEFT  => game.player.body[0].position.0 -= SCREEN_HEIGHT/21,
-        Direction::RIGHT => game.player.body[0].position.0 += SCREEN_HEIGHT/21,
+        Direction::UP    => game.player.body[0].position.1 -= 1,
+        Direction::DOWN  => game.player.body[0].position.1 += 1,
+        Direction::LEFT  => game.player.body[0].position.0 -= 1,
+        Direction::RIGHT => game.player.body[0].position.0 += 1,
     }
 
     // is food being eaten??
     if game.player.body[0].position.0 == game.food.position.0 && game.player.body[0].position.1 == game.food.position.1 {
-        score++; // hooray!
+        // score++; // hooray!
 
-        game.food.position.0 = SCREEN_HEIGHT;
+        game.food.position.0 = rng.gen_range(1..21);
+        game.food.position.1 = rng.gen_range(1..21);
     }
     // TODO: are you going ouroboros mode??
 }
@@ -73,16 +76,16 @@ fn draw_game(game: &mut Game, rl: &mut RaylibHandle, thread: &RaylibThread) {
 
     d.draw_rectangle(
         // TODO: this should probably iterate through the segments. later tho
-        game.player.body[0].position.0, 
-        game.player.body[0].position.1, 
+        game.player.body[0].position.0 * (SCREEN_WIDTH/21), 
+        game.player.body[0].position.1 * (SCREEN_HEIGHT/21), 
         SCREEN_WIDTH/21, 
         SCREEN_HEIGHT/21, 
         Color::PINK
     );
 
     d.draw_rectangle(
-        game.food.position.0,
-        game.food.position.1,
+        game.food.position.0 * (SCREEN_WIDTH/21), 
+        game.food.position.1 * (SCREEN_HEIGHT/21),
         SCREEN_WIDTH/21,
         SCREEN_HEIGHT/21,
         Color::ORANGE
@@ -150,7 +153,7 @@ impl Default for Player { // basically a constructor
 
 impl Default for Segment {
     fn default() -> Self {
-        let position = ( SCREEN_HEIGHT/2, SCREEN_WIDTH/2 );
+        let position = ( 10, 10 );
         let direction = Direction::UP;
 
         Self { position, direction }
@@ -162,8 +165,8 @@ impl Default for Food {
         let mut rng = rand::thread_rng();
 
         let position = (
-            (SCREEN_WIDTH/2),
-            (SCREEN_HEIGHT/2)
+            (rng.gen_range(1..21)),
+            (rng.gen_range(1..21))
         );
 
         Self { position }
