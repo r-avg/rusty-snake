@@ -7,8 +7,8 @@ use rand::*;
 
 const TARGET_FPS: u32 = 4; // this is a hard fps cap
 const PLAYER_SPEED: u32 = 60; // hardcoded but might change in future
-const SCREEN_WIDTH: i32 = 640;
-const SCREEN_HEIGHT: i32 = 640;
+const SCREEN_WIDTH: i32 = 840;
+const SCREEN_HEIGHT: i32 = 840;
 
 // let score: i32 = 0; // also keeps track of how many segments the snake has!! handy
                               
@@ -24,13 +24,13 @@ fn main() {
     let mut game = Game::default();
 
     while !rl.window_should_close() { // which contains our game loop!
-        update_game(&mut game, &rl);
+        update_game(&mut game, &mut rl);
         draw_game(&mut game, &mut rl, &thread)
     }
 }
 
 fn init_game(game: &mut Game, rl: &RaylibHandle) {
-    // TODO: spawn an food
+    // TODO: well so far this is not needed but i'll keep it here just in case 
     todo!();
 }
 
@@ -39,7 +39,6 @@ fn update_game(game: &mut Game, rl: &RaylibHandle) {
     // boilerplate
     use raylib::consts::KeyboardKey::*;
     let mut rng = rand::thread_rng();
-
 
     // checks so that snake controls like snake
     if rl.is_key_down(KEY_W) && game.player.body[0].direction != Direction::DOWN {
@@ -67,6 +66,13 @@ fn update_game(game: &mut Game, rl: &RaylibHandle) {
         game.food.position.1 = rng.gen_range(1..21);
     }
     // TODO: are you going ouroboros mode??
+    
+    // TODO: in lieu of a game over screen, going off-screen will reset you to the centre
+    // this should also reset your score but we don't have one yet lmao
+    if game.player.body[0].position.0 > 21 || game.player.body[0].position.0 < 0 || game.player.body[0].position.1 > 21 || game.player.body[0].position.1 < 0 {
+        game.player.body[0].position.0 = 10;
+        game.player.body[0].position.1 = 10;
+    }
 }
 
 fn draw_game(game: &mut Game, rl: &mut RaylibHandle, thread: &RaylibThread) {
