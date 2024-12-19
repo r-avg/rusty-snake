@@ -51,27 +51,55 @@ fn update_game(game: &mut Game, rl: &RaylibHandle) {
         game.player.body[0].direction = Direction::RIGHT;
     }
 
-    match game.player.body[0].direction {
-        Direction::UP    => game.player.body[0].position.1 -= 1,
-        Direction::DOWN  => game.player.body[0].position.1 += 1,
-        Direction::LEFT  => game.player.body[0].position.0 -= 1,
-        Direction::RIGHT => game.player.body[0].position.0 += 1,
+    // NOTE TO SELF: an idea of how this could work might be having the new segment remain
+    // static until it detects no segment of the array shares its same position, then start
+    // moving once it's free (?)
+
+    // TODO: iteration
+    for i in 0..game.player.body.len() { // the segment we're actually moving 
+        for j in 0..game.player.body.len() { // emptiness check! 
+            if game.player.body[i].position == game.player.body[j].position && i > j {
+                // in this case, the segment we want to move has to be BEFORE the similar segment
+                // therefore, no movement
+            } else {
+                match game.player.body[i].direction {
+                    Direction::UP    => game.player.body[i].position.1 -= 1,
+                    Direction::DOWN  => game.player.body[i].position.1 += 1,
+                    Direction::LEFT  => game.player.body[i].position.0 -= 1,
+                    Direction::RIGHT => game.player.body[i].position.0 += 1,
+                }
+            }
+        }
+    }
+    
+    // this is out here because updates to segment direction should happen AFTER segments move,
+    // iteratively - otherwise all segments would change direction at once and the game would be very silly
+    for i in 1..game.player.body.len() {
+        // segments move in the direction of the preceding segment, unless that segment
+        // is the first (because you wouldn't move otherwise, you dingus)
+        game.player.body[i].direction = game.player.body[i-1].direction.clone();
     }
 
     // is food being eaten??
     if game.player.body[0].position.0 == game.food.position.0 && game.player.body[0].position.1 == game.food.position.1 {
-        // score++; // hooray!
+        // behold! an segment
+        game.player.body.push(
+            Segment::new(
+                (game.player.body[0].position.0,game.player.body[0].position.1),
+                game.player.body[0].direction.clone()
+            )
+        );
 
         game.food.position.0 = rng.gen_range(1..21);
         game.food.position.1 = rng.gen_range(1..21);
     }
     // TODO: are you going ouroboros mode??
     
-    // TODO: in lieu of a game over screen, going off-screen will reset you to the centre
-    // this should also reset your score but we don't have one yet lmao
     if game.player.body[0].position.0 > 21 || game.player.body[0].position.0 < 0 || game.player.body[0].position.1 > 21 || game.player.body[0].position.1 < 0 {
         game.player.body[0].position.0 = 10;
         game.player.body[0].position.1 = 10;
+
+        game.player.body.truncate(1); // and all your progress goes whoosh
     }
 }
 
@@ -80,14 +108,16 @@ fn draw_game(game: &mut Game, rl: &mut RaylibHandle, thread: &RaylibThread) {
 
     d.clear_background(Color::WHITE);
 
-    d.draw_rectangle(
-        // TODO: this should probably iterate through the segments. later tho
-        game.player.body[0].position.0 * (SCREEN_WIDTH/21), 
-        game.player.body[0].position.1 * (SCREEN_HEIGHT/21), 
-        SCREEN_WIDTH/21, 
-        SCREEN_HEIGHT/21, 
-        Color::PINK
-    );
+    // TODO: segment position calculations
+    for s in &game.player.body {
+        d.draw_rectangle(
+            s.position.0 * (SCREEN_WIDTH/21), 
+            s.position.1 * (SCREEN_HEIGHT/21), 
+            SCREEN_WIDTH/21, 
+            SCREEN_HEIGHT/21, 
+            Color::PINK
+        );
+    }
 
     d.draw_rectangle(
         game.food.position.0 * (SCREEN_WIDTH/21), 
@@ -119,7 +149,7 @@ struct Food {
     position: (i32, i32)
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 enum Direction {
     UP,
     DOWN,
@@ -157,10 +187,17 @@ impl Default for Player { // basically a constructor
     }
 }
 
-impl Default for Segment {
+impl Segment {
     fn default() -> Self {
         let position = ( 10, 10 );
         let direction = Direction::UP;
+
+        Self { position, direction }
+    }
+
+    fn new(new_position: (i32, i32), new_direction: Direction) -> Self {
+        let position = new_position;
+        let direction = new_direction;
 
         Self { position, direction }
     }
