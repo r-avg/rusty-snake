@@ -43,34 +43,64 @@ fn update_game(game: &mut Game, rl: &RaylibHandle) {
     // checks so that snake controls like snake
     if rl.is_key_down(KEY_W) && game.player.body[0].direction != Direction::DOWN {
         game.player.body[0].direction = Direction::UP;
+        println!("up we go!");
     } else if rl.is_key_down(KEY_A) && game.player.body[0].direction != Direction::RIGHT {
         game.player.body[0].direction = Direction::LEFT;
+        println!("left we go!");
     } else if rl.is_key_down(KEY_S) && game.player.body[0].direction != Direction::UP {
         game.player.body[0].direction = Direction::DOWN;
+        println!("down we go!");
     } else if rl.is_key_down(KEY_D) && game.player.body[0].direction != Direction::LEFT {
         game.player.body[0].direction = Direction::RIGHT;
+        println!("right we go!");
     }
 
     // NOTE TO SELF: an idea of how this could work might be having the new segment remain
     // static until it detects no segment of the array shares its same position, then start
     // moving once it's free (?)
+    
+    let mut immobile: bool = false;
 
     // TODO: iteration
     for i in 0..game.player.body.len() { // the segment we're actually moving 
         for j in 0..game.player.body.len() { // emptiness check! 
-            if game.player.body[i].position == game.player.body[j].position && i > j {
+            if game.player.body[i].position == game.player.body[j].position && i < j {
                 // in this case, the segment we want to move has to be BEFORE the similar segment
                 // therefore, no movement
-            } else {
-                match game.player.body[i].direction {
-                    Direction::UP    => game.player.body[i].position.1 -= 1,
-                    Direction::DOWN  => game.player.body[i].position.1 += 1,
-                    Direction::LEFT  => game.player.body[i].position.0 -= 1,
-                    Direction::RIGHT => game.player.body[i].position.0 += 1,
-                }
+                immobile = true;
+                println!("whoopsies! segment overlap");
             }
         }
+
+        if !immobile{
+            match game.player.body[i].direction {
+                Direction::UP    => game.player.body[i].position.1 -= 1,
+                Direction::DOWN  => game.player.body[i].position.1 += 1,
+                Direction::LEFT  => game.player.body[i].position.0 -= 1,
+                Direction::RIGHT => game.player.body[i].position.0 += 1,
+            }
+        }
+
+        immobile = false;
+
+        println!("segment {0} position is {1},{2}", i, game.player.body[i].position.0, game.player.body[i].position.1);
     }
+
+    // is food being eaten??
+    if game.player.body[0].position.0 == game.food.position.0 && game.player.body[0].position.1 == game.food.position.1 {
+        // behold! an segment
+        game.player.body.push(
+            Segment::new(
+                (game.player.body[game.player.body.len()-1].position.0, game.player.body[game.player.body.len()-1].position.1),
+                game.player.body[0].direction.clone()
+            )
+        );
+        println!("new segment created at {0},{1}", game.player.body[game.player.body.len()-1].position.0, game.player.body[game.player.body.len()-1].position.1);
+
+        game.food.position.0 = rng.gen_range(1..21);
+        game.food.position.1 = rng.gen_range(1..21);
+    }
+    // TODO: are you going ouroboros mode??
     
     // this is out here because updates to segment direction should happen AFTER segments move,
     // iteratively - otherwise all segments would change direction at once and the game would be very silly
@@ -80,21 +110,7 @@ fn update_game(game: &mut Game, rl: &RaylibHandle) {
         game.player.body[i].direction = game.player.body[i-1].direction.clone();
     }
 
-    // is food being eaten??
-    if game.player.body[0].position.0 == game.food.position.0 && game.player.body[0].position.1 == game.food.position.1 {
-        // behold! an segment
-        game.player.body.push(
-            Segment::new(
-                (game.player.body[0].position.0,game.player.body[0].position.1),
-                game.player.body[0].direction.clone()
-            )
-        );
-
-        game.food.position.0 = rng.gen_range(1..21);
-        game.food.position.1 = rng.gen_range(1..21);
-    }
-    // TODO: are you going ouroboros mode??
-    
+    // out of bounds check 
     if game.player.body[0].position.0 > 21 || game.player.body[0].position.0 < 0 || game.player.body[0].position.1 > 21 || game.player.body[0].position.1 < 0 {
         game.player.body[0].position.0 = 10;
         game.player.body[0].position.1 = 10;
@@ -108,7 +124,6 @@ fn draw_game(game: &mut Game, rl: &mut RaylibHandle, thread: &RaylibThread) {
 
     d.clear_background(Color::WHITE);
 
-    // TODO: segment position calculations
     for s in &game.player.body {
         d.draw_rectangle(
             s.position.0 * (SCREEN_WIDTH/21), 
