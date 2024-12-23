@@ -20,7 +20,7 @@ fn main() {
 
     rl.set_target_fps(TARGET_FPS);
 
-    // TODO: this is to be replaced with an actual game func!!
+    // NOTE: this is to be replaced with an actual game func!!
     let mut game = Game::default();
 
     while !rl.window_should_close() { // which contains our game loop!
@@ -30,7 +30,7 @@ fn main() {
 }
 
 fn init_game(game: &mut Game, rl: &RaylibHandle) {
-    // TODO: well so far this is not needed but i'll keep it here just in case 
+    // NOTE: well so far this is not needed but i'll keep it here just in case 
     todo!();
 }
 
@@ -55,13 +55,8 @@ fn update_game(game: &mut Game, rl: &RaylibHandle) {
         println!("right we go!");
     }
 
-    // NOTE TO SELF: an idea of how this could work might be having the new segment remain
-    // static until it detects no segment of the array shares its same position, then start
-    // moving once it's free (?)
-    
     let mut immobile: bool = false;
 
-    // TODO: iteration
     for i in 0..game.player.body.len() { // the segment we're actually moving 
         for j in 0..game.player.body.len() { // emptiness check! 
             if game.player.body[i].position == game.player.body[j].position && i < j {
@@ -72,7 +67,7 @@ fn update_game(game: &mut Game, rl: &RaylibHandle) {
             }
         }
 
-        if !immobile{
+        if !immobile {
             match game.player.body[i].direction {
                 Direction::UP    => game.player.body[i].position.1 -= 1,
                 Direction::DOWN  => game.player.body[i].position.1 += 1,
@@ -104,10 +99,12 @@ fn update_game(game: &mut Game, rl: &RaylibHandle) {
     
     // this is out here because updates to segment direction should happen AFTER segments move,
     // iteratively - otherwise all segments would change direction at once and the game would be very silly
-    for i in 1..game.player.body.len() {
+    // TODO: well that didnt work did it
+    for i in (1..game.player.body.len()).rev() {
         // segments move in the direction of the preceding segment, unless that segment
         // is the first (because you wouldn't move otherwise, you dingus)
         game.player.body[i].direction = game.player.body[i-1].direction.clone();
+        println!("pollas en vinagre");
     }
 
     // out of bounds check 
